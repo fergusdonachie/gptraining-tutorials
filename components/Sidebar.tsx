@@ -4,9 +4,11 @@ import React from 'react';
 interface SidebarProps {
   view: string;
   setView: (v: any) => void;
+  isSyncing?: boolean;
+  onSync?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ view, setView }) => {
+const Sidebar: React.FC<SidebarProps> = ({ view, setView, isSyncing, onSync }) => {
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
       <div className="p-6 border-b border-slate-100">
@@ -31,7 +33,17 @@ const Sidebar: React.FC<SidebarProps> = ({ view, setView }) => {
           New Tutorial
         </button>
       </nav>
-      <div className="p-4 mt-auto border-t border-slate-100">
+      
+      <div className="p-4 border-t border-slate-100 space-y-3">
+        <button 
+          onClick={onSync}
+          disabled={isSyncing}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+        >
+          <i className={`fa-solid fa-rotate ${isSyncing ? 'animate-spin' : ''}`}></i>
+          {isSyncing ? 'Syncing...' : 'Sync with GitHub'}
+        </button>
+        
         <div className="bg-slate-50 p-3 rounded-xl">
           <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">User Mode</p>
           <p className="text-sm font-medium text-slate-700">GP Trainer / Trainee</p>
