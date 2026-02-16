@@ -4,8 +4,6 @@ import { Tutorial } from './types';
 import Dashboard from './components/Dashboard';
 import TutorialView from './components/TutorialView';
 import ContentStudio from './components/ContentStudio';
-import GuidanceHub from './components/GuidanceHub';
-import ResourceHub from './components/ResourceHub';
 import Navigation from './components/Navigation';
 
 const GITHUB_CONFIG = {
@@ -15,7 +13,7 @@ const GITHUB_CONFIG = {
 };
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'dashboard' | 'viewer' | 'studio' | 'guidance' | 'resources'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'viewer' | 'generator'>('dashboard');
   const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
   const [localDrafts, setLocalDrafts] = useState<Tutorial[]>([]);
@@ -40,8 +38,19 @@ const App: React.FC = () => {
   }, [localDrafts]);
 
   const parseMetadata = (content: string, filename: string): Tutorial => {
-    const titleMatch = content.match(/^(?:#|##)\s+(.*)$/m);
-    const title = titleMatch ? titleMatch[1] : filename.replace('.md', '');
+    const genericTerms = ['main learning', 'management summary', 'cases', 'references', 'learning points', 'introduction', 'summary'];
+    const titleMatches = Array.from(content.matchAll(/^(?:#|##)\s+(.*)$/gm));
+    
+    let title = filename.replace('.md', '').replace(/-/g, ' ');
+    for (const match of titleMatches) {
+      const candidate = match[1].trim();
+      const lowerCandidate = candidate.toLowerCase();
+      if (!genericTerms.some(term => lowerCandidate.includes(term))) {
+        title = candidate;
+        break;
+      }
+    }
+
     const lines = content.split('\n').filter(l => l.trim().length > 0 && !l.startsWith('#') && !l.startsWith('<'));
     const description = lines.length > 0 ? lines[0].substring(0, 120) + '...' : 'Clinical reasoning case.';
 
@@ -53,6 +62,7 @@ const App: React.FC = () => {
     else if (lowerContent.includes('depression') || lowerContent.includes('mental')) specialty = "Mental Health";
     else if (lowerContent.includes('cardiology') || lowerContent.includes('heart')) specialty = "Cardiology";
     else if (lowerContent.includes('skin') || lowerContent.includes('rash')) specialty = "Dermatology";
+    else if (lowerContent.includes('joint') || lowerContent.includes('back')) specialty = "MSK";
 
     return {
       id: filename,
@@ -75,12 +85,30 @@ const App: React.FC = () => {
       const response = await fetch(repoUrl);
       if (!response.ok) throw new Error('Github sync failed');
       const files = await response.json();
+      
+      const indexFile = files.find((f: any) => f.name === 'index.json');
+      let indexData: any[] = [];
+      if (indexFile) {
+        const indexRes = await fetch(indexFile.download_url);
+        indexData = await indexRes.json();
+      }
+
       const mdFiles = files.filter((f: any) => f.name.endsWith('.md'));
       const loadedTutorials = await Promise.all(mdFiles.map(async (file: any) => {
         const contentRes = await fetch(file.download_url);
         const text = await contentRes.text();
-        return parseMetadata(text, file.name);
+        const tutorial = parseMetadata(text, file.name);
+        
+        const manifestEntry = indexData.find(item => item.contentPath?.includes(file.name) || item.id === file.name.replace('.md', ''));
+        if (manifestEntry) {
+          tutorial.metadata.title = manifestEntry.metadata.title;
+          tutorial.metadata.description = manifestEntry.metadata.description;
+          tutorial.metadata.tags = manifestEntry.metadata.tags;
+        }
+        
+        return tutorial;
       }));
+      
       setTutorials(loadedTutorials);
       localStorage.setItem('gp_tutorials_cache', JSON.stringify(loadedTutorials));
     } catch (err) {
@@ -104,44 +132,30 @@ const App: React.FC = () => {
   const allTutorials = [...localDrafts, ...tutorials];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation view={view} setView={setView} onSync={handleSync} isSyncing={isSyncing} />
+    <div className="min-h-screen flex flex-col bg-white">
+      <Navigation view={view} setView={setView} />
       
       <main className="flex-1">
         {view === 'dashboard' && <Dashboard tutorials={allTutorials} onOpen={handleOpenTutorial} />}
         
         {view === 'viewer' && selectedTutorial && (
-          <div className="max-w-5xl mx-auto px-6 py-20">
+          <div className="max-w-7xl mx-auto px-6 py-12">
              <TutorialView tutorial={selectedTutorial} onBack={() => setView('dashboard')} />
           </div>
         )}
         
-        {view === 'studio' && (
-          <div className="max-w-5xl mx-auto px-6 py-20">
+        {view === 'generator' && (
+          <div className="max-w-5xl mx-auto px-6 py-12">
              <ContentStudio onAdd={handleAddDraft} onCancel={() => setView('dashboard')} />
-          </div>
-        )}
-
-        {view === 'guidance' && (
-          <div className="max-w-5xl mx-auto px-6 py-20">
-             <GuidanceHub />
-          </div>
-        )}
-
-        {view === 'resources' && (
-          <div className="max-w-5xl mx-auto px-6 py-20">
-             <ResourceHub />
           </div>
         )}
       </main>
 
-      <footer className="border-t border-slate-100 py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-widest">
-          <div>© 2026 GP Case Studio</div>
-          <div className="flex gap-8">
-            <a href="#" className="hover:text-black">Privacy</a>
-            <a href="#" className="hover:text-black">Contact</a>
-            <a href="#" className="hover:text-black">Github</a>
+      <footer className="border-t border-slate-100 py-8 bg-white mt-12">
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <div>GP Training Case Studio</div>
+          <div className="flex gap-6">
+            <span>v1.0.0</span>
           </div>
         </div>
       </footer>
