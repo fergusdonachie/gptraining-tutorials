@@ -4,6 +4,8 @@ export interface TutorialMetadata {
   description: string;
   tags: string[];
   date: string;
+  specialty: string;
+  isLocal?: boolean; // Flag to identify user-created drafts
 }
 
 export interface Tutorial {
@@ -23,7 +25,6 @@ export interface CaseData {
   steps: CaseStep[];
 }
 
-// Fixed: Added missing Message interface
 export interface Message {
   id: string;
   role: 'user' | 'model';
@@ -31,7 +32,7 @@ export interface Message {
   timestamp: Date;
 }
 
-// Fixed: Added missing GeneratedImage interface
+// Added GeneratedImage interface required by the ImageStudio component for tracking visual assets
 export interface GeneratedImage {
   id: string;
   url: string;

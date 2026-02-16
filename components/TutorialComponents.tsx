@@ -11,7 +11,7 @@ interface CalloutProps {
 export const Callout: React.FC<CalloutProps> = ({ type, title, children }) => {
   const styles = {
     ok: "bg-emerald-50 border-emerald-500 text-emerald-900",
-    note: "bg-blue-50 border-blue-500 text-blue-900",
+    note: "bg-orange-50 border-[#FF5C35] text-orange-900",
     warning: "bg-amber-50 border-amber-500 text-amber-900",
   };
 
@@ -22,14 +22,14 @@ export const Callout: React.FC<CalloutProps> = ({ type, title, children }) => {
   };
 
   return (
-    <div className={`my-6 p-6 border-l-4 rounded-r-2xl shadow-sm ${styles[type]}`}>
+    <div className={`my-8 p-8 border-l-4 rounded-r-[32px] shadow-sm ${styles[type]}`}>
       {title && (
-        <div className="flex items-center gap-2 mb-3 font-bold text-sm uppercase tracking-wider">
-          <i className={`fa-solid ${icons[type]}`}></i>
+        <div className="flex items-center gap-3 mb-4 font-black text-xs uppercase tracking-widest">
+          <i className={`fa-solid ${icons[type]} ${type === 'note' ? 'text-[#FF5C35]' : ''}`}></i>
           {title}
         </div>
       )}
-      <div className="text-sm leading-relaxed prose opacity-90 whitespace-pre-line">
+      <div className="text-sm leading-relaxed font-medium opacity-90 whitespace-pre-line">
         {children}
       </div>
     </div>
@@ -58,32 +58,34 @@ export const Case: React.FC<CaseProps> = ({ title, steps }) => {
   };
 
   return (
-    <div className="my-8 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md">
-      <div className="bg-slate-800 p-4 px-6 flex justify-between items-center">
-        <h3 className="text-white font-bold flex items-center gap-3">
-          <i className="fa-solid fa-hospital-user text-teal-400"></i>
+    <div className="my-12 bg-white border border-slate-100 rounded-[40px] overflow-hidden shadow-2xl">
+      <div className="bg-black p-8 flex justify-between items-center">
+        <h3 className="text-white text-xl font-black tracking-tight flex items-center gap-4">
+          <div className="w-10 h-10 rounded-2xl bg-[#FF5C35] flex items-center justify-center">
+            <i className="fa-solid fa-stethoscope text-white text-sm"></i>
+          </div>
           {title}
         </h3>
-        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest bg-slate-700 px-2 py-1 rounded">
-          Step {revealedIndex + 1} of {steps.length}
+        <div className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em] bg-white/10 px-4 py-2 rounded-full">
+          Step {revealedIndex + 1} / {steps.length}
         </div>
       </div>
       
-      <div className="p-6 space-y-4">
+      <div className="p-10 space-y-12">
         {steps.slice(0, revealedIndex + 1).map((step, idx) => (
-          <div key={idx} className="animate-in slide-in-from-top-2 duration-500 fill-mode-both">
-             <div className="flex items-start gap-4 mb-4 last:mb-0">
-               <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
-                 <span className="text-xs font-bold text-slate-500">{idx + 1}</span>
+          <div key={idx} className="animate-up">
+             <div className="flex items-start gap-8">
+               <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+                 <span className="text-sm font-black text-black">{idx + 1}</span>
                </div>
                <div className="flex-1">
-                 <h4 className="text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">{step.title}</h4>
-                 <div className="text-slate-600 text-sm leading-relaxed whitespace-pre-line bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                 <h4 className="text-xs font-black text-[#FF5C35] mb-4 uppercase tracking-[0.15em]">{step.title}</h4>
+                 <div className="text-slate-900 font-medium text-lg leading-relaxed whitespace-pre-line">
                     {step.content.replace(/\*\*Discussion prompts:\*\*/g, '').trim()}
                     {step.content.includes('Discussion prompts:') && (
-                        <div className="mt-4 pt-4 border-t border-slate-200">
-                             <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-2">Discussion prompts</p>
-                             <div className="text-teal-900 italic">
+                        <div className="mt-8 pt-8 border-t border-slate-100">
+                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Critique & Analysis</p>
+                             <div className="text-black italic bg-slate-50 p-6 rounded-2xl border border-slate-100 text-base">
                                 {step.content.split('Discussion prompts:')[1]?.trim()}
                              </div>
                         </div>
@@ -96,28 +98,25 @@ export const Case: React.FC<CaseProps> = ({ title, steps }) => {
       </div>
 
       {revealedIndex < steps.length - 1 && (
-        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-center">
+        <div className="p-10 bg-slate-50 border-t border-slate-100 flex justify-center">
           <button 
             onClick={handleNext}
-            className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold text-sm flex items-center gap-2 transition-all transform hover:scale-105 shadow-lg shadow-teal-900/10"
+            className="px-10 py-5 bg-black hover:bg-zinc-800 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 transition-all hover:scale-105 shadow-xl"
           >
-            Reveal Next Step
-            <i className="fa-solid fa-eye text-xs"></i>
+            Reveal Clinical Data
+            <i className="fa-solid fa-eye text-[10px]"></i>
           </button>
         </div>
       )}
 
       {revealedIndex === steps.length - 1 && (
-        <div className="p-4 bg-emerald-50 flex items-center justify-center gap-2 text-emerald-700 font-bold text-xs uppercase tracking-widest border-t border-emerald-100">
+        <div className="p-6 bg-emerald-50 flex items-center justify-center gap-3 text-emerald-600 font-black text-[10px] uppercase tracking-[0.3em] border-t border-emerald-100">
           <i className="fa-solid fa-check-circle"></i>
-          Case Completed
+          Module Complete
         </div>
       )}
     </div>
   );
 };
 
-export const Step: React.FC<StepData> = ({ title, content }) => {
-    // This is a dummy component for type-safety in rendering, logic is handled in Case
-    return null;
-}
+export const Step: React.FC<StepData> = ({ title, content }) => null;

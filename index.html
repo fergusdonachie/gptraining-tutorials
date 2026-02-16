@@ -4,27 +4,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GP Trainee Case Studio</title>
+  <title>GP Case Studio — Clinical Mastery</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    
+    :root {
+      --accent: #FF5C35;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      overflow-x: hidden;
     }
-    .scrollbar-hide::-webkit-scrollbar {
-      display: none;
+
+    .text-accent { color: var(--accent); }
+    .bg-accent { background-color: var(--accent); }
+    .border-accent { border-color: var(--accent); }
+
+    .hero-gradient {
+      background: radial-gradient(circle at 50% 120%, rgba(255, 92, 53, 0.15), transparent 70%);
     }
-    .scrollbar-hide {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+
+    .dashboard-preview-bg {
+      background: linear-gradient(135deg, #e2e8f0 0%, #ffffff 50%, #fecaca 100%);
+      position: relative;
     }
-    @keyframes slideInUp {
-        from { transform: translateY(10px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+
+    .dashboard-preview-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('https://www.transparenttextures.com/patterns/cubes.png');
+      opacity: 0.05;
     }
-    .animate-in {
-        animation: slideInUp 0.5s ease-out forwards;
+
+    .animate-up {
+      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 0, 0, 0.05);
     }
   </style>
 <script type="importmap">
@@ -38,7 +68,7 @@
 }
 </script>
 </head>
-<body class="bg-slate-50">
+<body class="selection:bg-orange-100">
   <div id="root"></div>
 </body>
 </html>
