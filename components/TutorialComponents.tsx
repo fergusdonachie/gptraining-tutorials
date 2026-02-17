@@ -26,8 +26,20 @@ interface CaseProps {
 
 export const Case: React.FC<CaseProps> = ({ title, steps }) => {
   const [revealedCount, setRevealedCount] = useState(1);
+  const [collapsedSteps, setCollapsedSteps] = useState<Record<number, boolean>>({});
 
-  // Safe fallback if steps are empty (should typically be handled by TutorialView)
+  const toggleStep = (idx: number) => {
+    setCollapsedSteps(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }));
+  };
+
+  const handleRestart = () => {
+    setRevealedCount(1);
+    setCollapsedSteps({});
+  };
+
   if (!steps || steps.length === 0) {
     return (
       <div className="my-10 p-4 border border-slate-100 rounded-xl bg-slate-50">
@@ -47,41 +59,71 @@ export const Case: React.FC<CaseProps> = ({ title, steps }) => {
            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Clinical Scenario</span>
            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">{title}</h2>
         </div>
-        <div className="bg-slate-900 text-white px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
-          Step {revealedCount} / {steps.length}
+        <div className="flex items-center gap-4">
+            {revealedCount > 1 && (
+                <button 
+                    onClick={handleRestart}
+                    className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors"
+                >
+                    Restart
+                </button>
+            )}
+            <div className="bg-slate-900 text-white px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
+            Step {revealedCount} / {steps.length}
+            </div>
         </div>
       </div>
 
       {/* Steps Container */}
-      <div className="space-y-16 pl-4 md:pl-8 border-l-2 border-slate-100 relative">
-        {steps.slice(0, revealedCount).map((step, idx) => (
-          <div key={idx} className="animate-in fade-in slide-in-from-bottom-8 duration-700 relative">
-            
-            {/* Step Marker Dot */}
-            <div className={`absolute -left-[41px] md:-left-[43px] top-0 w-5 h-5 rounded-full border-4 border-white transition-colors duration-500 ${idx === revealedCount - 1 ? 'bg-[#FF5C35] ring-4 ring-[#FF5C35]/20' : 'bg-slate-200'}`}></div>
+      <div className="space-y-6 pl-4 md:pl-8 border-l-2 border-slate-100 relative">
+        {steps.slice(0, revealedCount).map((step, idx) => {
+          const isCollapsed = collapsedSteps[idx];
+          const isLatest = idx === revealedCount - 1;
 
-            <h3 className="text-sm font-black uppercase tracking-widest text-[#FF5C35] mb-6 flex items-center gap-2">
-              {step.title}
-            </h3>
-            
-            <div className="prose prose-slate prose-lg max-w-none text-slate-700 mb-8">
-                {step.content}
-            </div>
-            
-            {/* Trainer Notes */}
-            {step.trainerNotes && (
-                <div className="bg-amber-50/40 border border-amber-100 rounded-xl p-6 md:p-8 relative mt-8">
-                    <div className="absolute -top-3 left-6 bg-amber-100 text-amber-900 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm flex items-center gap-2">
-                        <i className="fa-solid fa-user-graduate"></i>
-                        Trainer Guidance
-                    </div>
-                    <div className="text-amber-950/80 text-base font-medium leading-relaxed mt-2">
-                        {step.trainerNotes}
-                    </div>
+          return (
+            <div key={idx} className={`animate-in fade-in slide-in-from-bottom-8 duration-700 relative pb-10 ${!isLatest && !isCollapsed ? 'opacity-90' : ''}`}>
+              
+              {/* Step Marker Dot */}
+              <div className={`absolute -left-[41px] md:-left-[43px] top-0 w-5 h-5 rounded-full border-4 border-white transition-all duration-500 z-10 ${isLatest ? 'bg-[#FF5C35] ring-4 ring-[#FF5C35]/20' : 'bg-slate-200'}`}></div>
+
+              <div className={`transition-all duration-500 ${isCollapsed ? 'bg-slate-50 border border-slate-100 p-4 rounded-xl' : ''}`}>
+                <div 
+                    className={`flex items-center justify-between group/header cursor-pointer select-none mb-4`}
+                    onClick={() => toggleStep(idx)}
+                >
+                    <h3 className={`text-sm font-black uppercase tracking-widest flex items-center gap-2 ${isLatest ? 'text-[#FF5C35]' : 'text-slate-400'}`}>
+                        {step.title}
+                        {isCollapsed && <span className="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded ml-2">Collapsed</span>}
+                    </h3>
+                    <button className="text-slate-300 group-hover/header:text-slate-900 transition-colors p-2">
+                        <i className={`fa-solid ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'} text-[10px]`}></i>
+                    </button>
                 </div>
-            )}
-          </div>
-        ))}
+                
+                {!isCollapsed && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="prose prose-slate prose-lg max-w-none text-slate-700 mb-8">
+                            {step.content}
+                        </div>
+                        
+                        {/* Trainer Notes */}
+                        {step.trainerNotes && (
+                            <div className="bg-amber-50/40 border border-amber-100 rounded-xl p-6 md:p-8 relative mt-8">
+                                <div className="absolute -top-3 left-6 bg-amber-100 text-amber-900 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm flex items-center gap-2">
+                                    <i className="fa-solid fa-user-graduate"></i>
+                                    Trainer Guidance
+                                </div>
+                                <div className="text-amber-950/80 text-base font-medium leading-relaxed mt-2">
+                                    {step.trainerNotes}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Reveal Button */}
@@ -94,9 +136,17 @@ export const Case: React.FC<CaseProps> = ({ title, steps }) => {
                 Reveal Next Stage <i className="fa-solid fa-arrow-down animate-bounce"></i>
             </button>
         ) : (
-            <div className="inline-flex items-center gap-3 bg-green-50 text-green-700 px-6 py-4 rounded-xl border border-green-100">
-                <i className="fa-solid fa-check-circle text-lg"></i>
-                <span className="text-xs font-bold uppercase tracking-widest">Case Discussion Concluded</span>
+            <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="inline-flex items-center gap-3 bg-green-50 text-green-700 px-6 py-4 rounded-xl border border-green-100">
+                    <i className="fa-solid fa-check-circle text-lg"></i>
+                    <span className="text-xs font-bold uppercase tracking-widest">Case Discussion Concluded</span>
+                </div>
+                <button 
+                    onClick={handleRestart}
+                    className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors underline decoration-slate-200 underline-offset-8"
+                >
+                    Reset and go again
+                </button>
             </div>
         )}
       </div>

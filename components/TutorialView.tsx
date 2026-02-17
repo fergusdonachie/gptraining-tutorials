@@ -8,7 +8,6 @@ interface TutorialViewProps {
   onBack: () => void;
 }
 
-// Data Structures
 interface Step {
   title: string;
   lines: string[];
@@ -17,15 +16,18 @@ interface Step {
 
 interface CaseBlock {
   title: string;
-  introduction: string[]; // Content before the first step (or if no steps exist)
+  introduction: string[];
   steps: Step[];
 }
 
 const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
   
   const { intro, cases } = useMemo(() => {
-    const rawText = tutorial.content.replace(/^---[\s\S]*?---\n/, '').trim();
-    const lines = rawText.split('\n');
+    const rawText = tutorial.content
+      .replace(/^---\s*[\r\n]+[\s\S]*?[\r\n]+---\s*/, '')
+      .trim();
+      
+    const lines = rawText.split(/\r?\n/);
 
     const introLines: string[] = [];
     const casesList: CaseBlock[] = [];
@@ -38,15 +40,14 @@ const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
       const line = lines[i].trimEnd();
       const trimmed = line.trim();
 
-      // 1. Detect Case Start (Level 2 Header)
+      if (inIntro && !trimmed && introLines.length === 0) continue;
+
       if (trimmed.startsWith('## ')) {
-        // Save previous step and case
         if (currentCase) {
           if (currentStep) currentCase.steps.push(currentStep);
           casesList.push(currentCase);
         }
         
-        // Start new case
         inIntro = false;
         currentCase = {
           title: trimmed.replace(/^##\s+/, '').replace(/^Case:\s*/i, ''),
@@ -57,7 +58,6 @@ const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
         continue;
       }
 
-      // 2. Detect Step Start (Level 3 Header)
       if (trimmed.startsWith('### ')) {
         if (currentCase) {
           if (currentStep) currentCase.steps.push(currentStep);
@@ -71,12 +71,9 @@ const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
         continue;
       }
 
-      // 3. Routing Content
       if (inIntro) {
         introLines.push(line);
       } else if (currentCase && currentStep) {
-        // Content inside a Step
-        // Check for Trainer Guidance
         if (trimmed.toLowerCase().startsWith('> **trainer guidance') || trimmed.toLowerCase().startsWith('> ** trainer guidance')) {
           const content = trimmed.replace(/^>\s*\*\*Trainer Guidance\*\*/i, '').replace(/^>\s*/, '');
           if(content) currentStep.trainerNotes.push(content);
@@ -88,13 +85,10 @@ const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
            currentStep.lines.push(line);
         }
       } else if (currentCase) {
-         // Content inside a Case Section but NOT in a step
-         // This captures content for summaries, preambles, or non-interactive sections
          currentCase.introduction.push(line);
       }
     }
 
-    // Final Flush
     if (currentCase) {
       if (currentStep) currentCase.steps.push(currentStep);
       casesList.push(currentCase);
@@ -103,8 +97,16 @@ const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
     return { intro: introLines, cases: casesList };
   }, [tutorial.content]);
 
-  // Markdown Rendering Helper
-  const renderContent = (lines: string[]) => {
+  const processFormat = (text: string) => {
+    return text.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
+  const renderContent = (lines: string[]): React.ReactNode[] => {
     const text = lines.join('\n');
     const blocks = text.split(/\n\n+/);
 
@@ -112,12 +114,14 @@ const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
       const trimmed = block.trim();
       if (!trimmed) return null;
 
-      // Headers (Level 1 usually in intro)
       if (trimmed.startsWith('# ')) {
-        return <h1 key={i} className="text-3xl font-black text-slate-900 mt-8 mb-4 tracking-tight">{processFormat(trimmed.replace(/^#\s+/, ''))}</h1>;
+        return <h2 key={i} className="text-2xl font-black text-slate-900 mt-8 mb-4 tracking-tight border-b border-slate-100 pb-2">{processFormat(trimmed.replace(/^#\s+/, ''))}</h2>;
+      }
+      
+      if (trimmed.startsWith('## ')) {
+        return <h3 key={i} className="text-xl font-bold text-slate-900 mt-6 mb-3 tracking-tight">{processFormat(trimmed.replace(/^##\s+/, ''))}</h3>;
       }
 
-      // Lists
       if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
         const items = trimmed.split('\n').filter(l => l.trim().match(/^[-*]\s/));
         return (
@@ -131,32 +135,33 @@ const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
         );
       }
 
-      // Blockquotes / Callouts
       if (trimmed.startsWith('>')) {
-        const clean = trimmed.split('\n').map(l => l.replace(/^>\s?/, '')).join('\n');
-        const titleMatch = clean.match(/^\*\*(.*?)\*\*/);
+        const rawLines = block.split('\n');
+        const firstLineClean = rawLines[0].replace(/^>\s?/, '').trim();
+        const titleMatch = firstLineClean.match(/^\*\*(.*?)\*\*$/);
         
+        let title = undefined;
+        let contentLines: string[] = [];
+
         if (titleMatch) {
-          return <Callout key={i} title={titleMatch[1]}>{processFormat(clean.replace(titleMatch[0], ''))}</Callout>;
+            title = titleMatch[1];
+            contentLines = rawLines.slice(1).map(l => l.replace(/^>\s?/, ''));
+        } else {
+            contentLines = rawLines.map(l => l.replace(/^>\s?/, ''));
         }
+        
+        if (title) {
+             return <Callout key={i} title={title}>{renderContent(contentLines)}</Callout>;
+        }
+        
         return (
           <div key={i} className="border-l-4 border-[#FF5C35] bg-orange-50/50 p-4 my-6 rounded-r-xl italic text-slate-700 font-medium">
-             {processFormat(clean)}
+             {renderContent(contentLines)}
           </div>
         );
       }
 
-      // Standard Paragraph
       return <p key={i} className="mb-4 text-slate-700 leading-relaxed text-lg font-medium">{processFormat(trimmed)}</p>;
-    });
-  };
-
-  const processFormat = (text: string) => {
-    return text.split(/(\*\*.*?\*\*)/g).map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
-      }
-      return part;
     });
   };
 
@@ -194,13 +199,12 @@ const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
         </div>
 
         {/* Content Sections & Cases */}
-        <div className="space-y-24">
+        <div className="space-y-32">
           {cases.map((caseBlock, idx) => {
-            // Logic: If there are NO steps, render it as a static information section
-            // This handles headers like "Main learning points" or "Management Summary"
+            const hasIntroText = caseBlock.introduction.some(line => line.trim().length > 0);
+            
             if (caseBlock.steps.length === 0) {
-              // Skip rendering empty headers
-              if (caseBlock.introduction.length === 0 && !caseBlock.title) return null;
+              if (!hasIntroText && !caseBlock.title) return null;
               
               return (
                 <section key={idx} className="mb-16">
@@ -214,13 +218,11 @@ const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
               );
             }
 
-            // Otherwise, render as an interactive Case
             return (
               <div key={idx}>
-                {/* Optional Preamble for the Case */}
-                {caseBlock.introduction.length > 0 && (
-                  <div className="mb-8">
-                     <h2 className="text-2xl font-bold text-slate-900 mb-4">{caseBlock.title} (Intro)</h2>
+                {hasIntroText && (
+                  <div className="mb-12 bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
+                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">Scenario Context</span>
                      {renderContent(caseBlock.introduction)}
                   </div>
                 )}

@@ -13,14 +13,13 @@ const GITHUB_CONFIG = {
 };
 
 const CACHE_KEYS = {
-  DRAFTS: 'gp_studio_drafts_v10',
-  TUTORIALS: 'gp_tutorials_cache_v10'
+  DRAFTS: 'gp_studio_drafts_v13',
+  TUTORIALS: 'gp_tutorials_cache_v13'
 };
 
-// EMBEDDED CONTENT: Ensures the app works immediately even if GitHub is stale
 const DEFAULT_TUTORIAL_CONTENT = `
 ---
-title: Heavy menstrual bleeding (Menorrhagia)
+title: Heavy Menstrual Bleeding (Menorrhagia)
 description: Assessment of HMB, initial investigations, and the NG88 stepwise management approach.
 specialty: Women's Health
 tags: [Gynaecology, Primary Care, NG88]
@@ -36,6 +35,8 @@ date: 2026-02-15
 > * **Safety Net:** Always arrange follow-up to assess response and check Hb.
 
 ## Case: The "Tired All The Time" Patient
+
+This is a 10-minute consultation in a busy morning surgery. The patient is known to the practice but hasn't attended in two years. You have her records open on the screen.
 
 ### Step 1: Presentation
 **Patient:** Sarah, 29-year-old female.
@@ -77,25 +78,6 @@ She describes cycles that leave her feeling "drained". She is changing protectio
 Sarah declines the Coil (LNG-IUS) as she dislikes the idea of a procedure. She opts for **Tranexamic Acid** (1g TDS during menses) and **Mefenamic Acid**. She starts Ferrous Fumarate.
 
 **Plan:** Review in 3 months to check bleeding control and repeat FBC.
-
-## Case: HMB with Intermenstrual Bleeding
-
-### Step 1: Presentation
-**Patient:** Diane, 42-year-old female.
-**Complaint:** Heaviness has increased over 6 months, but she is actually worried because she has noticed spotting a few days before her period starts.
-
-> **Trainer Guidance**
-> How does the management change with the addition of Intermenstrual Bleeding (IMB)?
-> *Key Point:* IMB is a red flag for structural pathology (Polyps, Fibroids, Malignancy) or Infection. This patient **requires** physical examination and visualization of the cervix.
-
-### Step 2: Assessment
-**Speculum:** Cervix appears healthy. No polyps visible.
-**Bimanual:** Bulky uterus (approx 10-12 week size), non-tender. mobile.
-
-> **Trainer Guidance**
-> *Decision Point:* A bulky uterus + IMB triggers the need for imaging.
-> A **Transvaginal Ultrasound (TVUSS)** is now mandatory to exclude fibroids or endometrial pathology.
-> *Referral Criteria:* If ultrasound shows polyp or submucosal fibroid, she needs Hysteroscopy. If endometrium is thickened (>10mm in pre-menopause usually acceptable, but clinical judgement applies regarding biopsy if IMB persistent).
 `;
 
 const App: React.FC = () => {
@@ -105,10 +87,10 @@ const App: React.FC = () => {
   const [localDrafts, setLocalDrafts] = useState<Tutorial[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Parse metadata helper
   const parseMetadata = (content: string, filename: string): Tutorial => {
-    const frontmatterRegex = /^---\n([\s\S]*?)\n---/;
-    const match = content.match(frontmatterRegex);
+    const trimmedContent = content.trim();
+    const frontmatterRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*/;
+    const match = trimmedContent.match(frontmatterRegex);
     
     let metadata: any = {
       title: filename.replace('.md', '').replace(/-/g, ' '),
@@ -120,30 +102,35 @@ const App: React.FC = () => {
 
     if (match) {
       const yaml = match[1];
-      const titleMatch = yaml.match(/title:\s*(.*)/);
-      const descMatch = yaml.match(/description:\s*(.*)/);
-      const specMatch = yaml.match(/specialty:\s*(.*)/);
-      const tagsMatch = yaml.match(/tags:\s*\[(.*)\]/);
-      const dateMatch = yaml.match(/date:\s*(.*)/);
+      const getValue = (key: string) => {
+        const r = new RegExp(`${key}:\\s*(.*)`, 'i');
+        const m = yaml.match(r);
+        return m ? m[1].trim().replace(/^["']|["']$/g, '') : null;
+      };
 
-      if (titleMatch) metadata.title = titleMatch[1].trim();
-      if (descMatch) metadata.description = descMatch[1].trim();
-      if (specMatch) metadata.specialty = specMatch[1].trim();
-      if (dateMatch) metadata.date = dateMatch[1].trim();
-      if (tagsMatch) {
-        metadata.tags = tagsMatch[1].split(',').map((t: string) => t.trim());
+      const title = getValue('title');
+      const desc = getValue('description');
+      const spec = getValue('specialty');
+      const date = getValue('date');
+      const tagsStr = getValue('tags');
+
+      if (title) metadata.title = title;
+      if (desc) metadata.description = desc;
+      if (spec) metadata.specialty = spec;
+      if (date) metadata.date = date;
+      if (tagsStr) {
+        metadata.tags = tagsStr.replace(/[\[\]]/g, '').split(',').map(t => t.trim().replace(/^["']|["']$/g, ''));
       }
     }
 
     return {
       id: filename,
       metadata,
-      content: content
+      content: trimmedContent
     };
   };
 
   useEffect(() => {
-    // Aggressive cleanup of old caches
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('gp_') && key !== CACHE_KEYS.DRAFTS && key !== CACHE_KEYS.TUTORIALS) {
         localStorage.removeItem(key);
@@ -155,22 +142,12 @@ const App: React.FC = () => {
       setLocalDrafts(JSON.parse(cachedLocal));
     }
 
-    // Initialize with Embedded Tutorial + Cached Remote
-    const embedded = parseMetadata(DEFAULT_TUTORIAL_CONTENT, 'hmb-001.md');
-    
     const cachedRemoteString = localStorage.getItem(CACHE_KEYS.TUTORIALS);
-    let initialTutorials = [embedded];
-    
     if (cachedRemoteString) {
-      const cached = JSON.parse(cachedRemoteString);
-      // Merge cached, but prefer embedded for hmb-001 to avoid stale GitHub data
-      const others = cached.filter((t: Tutorial) => t.id !== 'hmb-001.md' && t.id !== 'hmb.md');
-      initialTutorials = [...initialTutorials, ...others];
+      setTutorials(JSON.parse(cachedRemoteString));
+    } else {
+      handleSync();
     }
-
-    setTutorials(initialTutorials);
-    // Removed auto-sync on mount to prevent overriding the clean local data with stale GitHub data.
-    // User must manually press sync if they want to fetch from repo.
   }, []);
 
   useEffect(() => {
@@ -193,13 +170,10 @@ const App: React.FC = () => {
         return parseMetadata(text, file.name);
       }));
       
-      // Update state, but if the downloaded 'hmb.md' is the old XML version, this might break things again.
-      // For this specific case, we will trust the user updates GitHub later.
       setTutorials(loadedTutorials);
       localStorage.setItem(CACHE_KEYS.TUTORIALS, JSON.stringify(loadedTutorials));
     } catch (err) {
       console.error(err);
-      alert("Sync failed. Using local mode.");
     } finally {
       setIsSyncing(false);
     }
@@ -245,7 +219,7 @@ const App: React.FC = () => {
              <button onClick={handleSync} disabled={isSyncing} className="hover:text-slate-900 transition-colors disabled:opacity-50">
                 {isSyncing ? 'Syncing...' : 'Sync GitHub'}
              </button>
-            <span>v1.10.0 (Local First)</span>
+            <span>v1.13.0 (Clean Layout)</span>
           </div>
         </div>
       </footer>
