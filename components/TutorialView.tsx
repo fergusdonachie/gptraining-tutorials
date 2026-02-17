@@ -97,72 +97,132 @@ const TutorialView: React.FC<TutorialViewProps> = ({ tutorial, onBack }) => {
     return { intro: introLines, cases: casesList };
   }, [tutorial.content]);
 
+  // Support for bold and italics
   const processFormat = (text: string) => {
-    return text.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+    return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*')) {
+        return <em key={i} className="italic text-slate-800">{part.slice(1, -1)}</em>;
       }
       return part;
     });
   };
 
+  // Robust Block-level Parser
   const renderContent = (lines: string[]): React.ReactNode[] => {
-    const text = lines.join('\n');
-    const blocks = text.split(/\n\n+/);
+    const contentNodes: React.ReactNode[] = [];
+    let i = 0;
 
-    return blocks.map((block, i) => {
-      const trimmed = block.trim();
-      if (!trimmed) return null;
+    while (i < lines.length) {
+      const line = lines[i];
+      const trimmed = line.trim();
 
+      if (!trimmed) {
+        i++;
+        continue;
+      }
+
+      // 1. Headers
       if (trimmed.startsWith('# ')) {
-        return <h2 key={i} className="text-2xl font-black text-slate-900 mt-8 mb-4 tracking-tight border-b border-slate-100 pb-2">{processFormat(trimmed.replace(/^#\s+/, ''))}</h2>;
+        contentNodes.push(<h2 key={i} className="text-2xl font-black text-slate-900 mt-8 mb-4 tracking-tight border-b border-slate-100 pb-2">{processFormat(trimmed.replace(/^#\s+/, ''))}</h2>);
+        i++;
+        continue;
+      }
+      if (trimmed.startsWith('## ')) {
+        contentNodes.push(<h3 key={i} className="text-xl font-bold text-slate-900 mt-6 mb-3 tracking-tight">{processFormat(trimmed.replace(/^##\s+/, ''))}</h3>);
+        i++;
+        continue;
+      }
+
+      // 2. Blockquotes / Callouts
+      if (trimmed.startsWith('>')) {
+        const bqLines: string[] = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) {
+          bqLines.push(lines[i].trim().replace(/^>\s?/, ''));
+          i++;
+        }
+        
+        const firstLine = bqLines[0] || '';
+        const titleMatch = firstLine.match(/^\*\*(.*?)\*\*$/);
+        
+        if (titleMatch) {
+          contentNodes.push(
+            <Callout key={i} title={titleMatch[1]}>
+              {renderContent(bqLines.slice(1))}
+            </Callout>
+          );
+        } else {
+          contentNodes.push(
+            <div key={i} className="border-l-4 border-[#FF5C35] bg-orange-50/50 p-6 my-6 rounded-r-2xl italic text-slate-700">
+              {renderContent(bqLines)}
+            </div>
+          );
+        }
+        continue;
+      }
+
+      // 3. Lists (Bulleted or Numbered)
+      const isBullet = trimmed.startsWith('* ') || trimmed.startsWith('- ');
+      const isNumbered = trimmed.match(/^\d+\.\s/);
+      
+      if (isBullet || isNumbered) {
+        const listItems: string[] = [];
+        const listType = isBullet ? 'ul' : 'ol';
+
+        while (i < lines.length) {
+          const curTrim = lines[i].trim();
+          if (listType === 'ul' && (curTrim.startsWith('* ') || curTrim.startsWith('- '))) {
+            listItems.push(curTrim.replace(/^[-*]\s/, ''));
+          } else if (listType === 'ol' && curTrim.match(/^\d+\.\s/)) {
+            listItems.push(curTrim.replace(/^\d+\.\s/, ''));
+          } else {
+            break;
+          }
+          i++;
+        }
+
+        const listClass = "mb-6 space-y-2 ml-6 text-slate-700 font-medium leading-relaxed";
+        if (listType === 'ul') {
+          contentNodes.push(
+            <ul key={i} className={`${listClass} list-disc`}>
+              {listItems.map((item, idx) => <li key={idx} className="pl-2">{processFormat(item)}</li>)}
+            </ul>
+          );
+        } else {
+          contentNodes.push(
+            <ol key={i} className={`${listClass} list-decimal`}>
+              {listItems.map((item, idx) => <li key={idx} className="pl-2">{processFormat(item)}</li>)}
+            </ol>
+          );
+        }
+        continue;
+      }
+
+      // 4. Paragraphs
+      const pLines: string[] = [];
+      while (i < lines.length) {
+        const curTrim = lines[i].trim();
+        // Break if we hit a new block type
+        if (!curTrim || curTrim.startsWith('#') || curTrim.startsWith('>') || curTrim.startsWith('* ') || curTrim.startsWith('- ') || curTrim.match(/^\d+\.\s/)) {
+          break;
+        }
+        pLines.push(lines[i]);
+        i++;
       }
       
-      if (trimmed.startsWith('## ')) {
-        return <h3 key={i} className="text-xl font-bold text-slate-900 mt-6 mb-3 tracking-tight">{processFormat(trimmed.replace(/^##\s+/, ''))}</h3>;
-      }
-
-      if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-        const items = trimmed.split('\n').filter(l => l.trim().match(/^[-*]\s/));
-        return (
-          <ul key={i} className="mb-4 space-y-2">
-            {items.map((item, idx) => (
-              <li key={idx} className="ml-4 list-disc pl-2 text-slate-700 leading-relaxed font-medium">
-                {processFormat(item.replace(/^[-*]\s/, ''))}
-              </li>
-            ))}
-          </ul>
+      if (pLines.length > 0) {
+        contentNodes.push(
+          <p key={i} className="mb-4 text-slate-700 leading-relaxed text-lg font-medium">
+            {processFormat(pLines.join(' '))}
+          </p>
         );
       }
+    }
 
-      if (trimmed.startsWith('>')) {
-        const rawLines = block.split('\n');
-        const firstLineClean = rawLines[0].replace(/^>\s?/, '').trim();
-        const titleMatch = firstLineClean.match(/^\*\*(.*?)\*\*$/);
-        
-        let title = undefined;
-        let contentLines: string[] = [];
-
-        if (titleMatch) {
-            title = titleMatch[1];
-            contentLines = rawLines.slice(1).map(l => l.replace(/^>\s?/, ''));
-        } else {
-            contentLines = rawLines.map(l => l.replace(/^>\s?/, ''));
-        }
-        
-        if (title) {
-             return <Callout key={i} title={title}>{renderContent(contentLines)}</Callout>;
-        }
-        
-        return (
-          <div key={i} className="border-l-4 border-[#FF5C35] bg-orange-50/50 p-4 my-6 rounded-r-xl italic text-slate-700 font-medium">
-             {renderContent(contentLines)}
-          </div>
-        );
-      }
-
-      return <p key={i} className="mb-4 text-slate-700 leading-relaxed text-lg font-medium">{processFormat(trimmed)}</p>;
-    });
+    return contentNodes;
   };
 
   return (
