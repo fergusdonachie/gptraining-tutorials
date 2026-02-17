@@ -1,75 +1,78 @@
 
-## Main learning points
+---
+title: Heavy menstrual bleeding (Menorrhagia)
+description: Assessment of HMB, initial investigations, and the NG88 stepwise management approach.
+specialty: Women's Health
+tags: [Gynaecology, Primary Care, NG88]
+date: 2026-02-15
+---
 
-<Callout type="ok" title="Main learning points">
-- Take a structured bleeding history: pattern, duration, flooding/clots, impact, intermenstrual bleeding (IMB)/postcoital bleeding (PCB), pregnancy risk, contraception/HRT.
-- Screen for red flags and alternate diagnoses (pregnancy, infection, cervical pathology, cancer features, anticoagulants/bleeding disorder).
-- Start with **simple primary care investigations** where appropriate (e.g. pregnancy test if relevant; FBC; consider ferritin; STI testing if indicated).
-- Follow a **stepwise NG88-style approach**: shared decision-making, choose options based on likely cause, acceptability, and contraindications.
-- Always safety-net and arrange follow-up to assess response and anaemia.
-</Callout>
+# Clinical Summary
 
-## Management summary (one page)
+> **Main Learning Points**
+> * **History:** Quantify bleeding (flooding, clots), check impact on quality of life, and screen for red flags (PCB/IMB).
+> * **Assessment:** Screen for anaemia and red flags. Speculum if IMB/PCB or cervical concerns.
+> * **Management:** Follow **NG88 stepwise approach**. Mirena (LNG-IUS) is 1st line if acceptable.
+> * **Safety Net:** Always arrange follow-up to assess response and check Hb.
 
-<Callout type="note" title="Management summary (one page)">
-1) Clarify HMB vs other AUB (IMB/PCB/PMB)
-2) Check pregnancy risk; screen for red flags
-3) Initial tests: FBC ± ferritin; pregnancy test if relevant; consider STI tests if cervicitis risk; treat anaemia
-4) First-line options (based on likely cause and patient preference)
-   - LNG-IUS if suitable
-   - If LNG-IUS unsuitable/declined: tranexamic acid / NSAID / combined hormonal contraception / cyclical oral progestogen (per guidance)
-5) Review response and side effects; escalate/referral if persistent, structural suspicion, or red flags
-</Callout>
+## Case: The "Tired All The Time" Patient
 
-## Cases
+### Step 1: Presentation
+**Patient:** Sarah, 29-year-old female.
+**Complaint:** "I'm just so exhausted, doctor. My periods have become unmanageable."
 
-<Case title="Case 1 — bread and butter HMB">
-  <Step title="Presenting problem" open>
-  29-year-old: “My periods are really heavy and I’m exhausted.”
+She describes cycles that leave her feeling "drained". She is changing protection every 2 hours on days 1-3.
 
-  **Discussion prompts:**
-  - What questions quantify heaviness and impact?
-  - What associated bleeding patterns change your differential (IMB/PCB/PMB)?
-  - What contraception and pregnancy-risk questions matter here?
-  </Step>
+> **Trainer Guidance**
+> Ask the trainee to specifically quantify "heavy". Look for history of flooding, clots >1 inch, or need for double protection. Check for symptoms of anaemia (SOB, fatigue).
 
-  <Step title="More history">
-  Regular cycles. Flooding on day 1–2, clots. No IMB/PCB. No pelvic pain. Not on anticoagulants.
+### Step 2: Detailed History
+* **Cycle:** Regular 28-day cycle, bleeding lasts 7 days.
+* **Pain:** Moderate cramping, managed with ibuprofen.
+* **Red Flags:** No Intermenstrual Bleeding (IMB), No Post-coital Bleeding (PCB). Smear is up to date and normal.
+* **Contraception:** Currently using condoms. Not seeking pregnancy.
+* **Meds:** None. No family history of bleeding disorders.
 
-  **Discussion prompts:**
-  - What baseline exam/tests do you do in primary care?
-  - How will you screen for anaemia and treat it?
-  - What are appropriate first-line treatment options?
-  </Step>
+> **Trainer Guidance**
+> Discuss the differential diagnosis here. Since there is no IMB/PCB and the cervix is normal (assumed), structural pathology is less likely, but fibroids are possible.
+> *Ask Trainee:* What is the first-line investigation? (FBC). Do we need an ultrasound immediately? (Not usually, unless mass felt or pharm treatment fails).
 
-  <Step title="Results & plan">
-  FBC: Hb 102 g/L, microcytosis.
+### Step 3: Examination & Results
+**Abdominal Exam:** Soft, non-tender. No palpable uterus.
+**Speculum:** Not strictly indicated if history is low risk (no IMB/PCB), but performed: Normal cervix.
+**Investigations:**
+* **FBC:** Hb 102 g/L (Microcytic). Ferritin 8.
+* **Pregnancy Test:** Negative.
+* **Coagulation:** Not indicated (no suggestive history).
 
-  **Discussion prompts:**
-  - What do you prescribe for iron replacement and what counselling do you give?
-  - What’s your follow-up interval?
-  - When would you refer if she doesn’t improve?
-  </Step>
-</Case>
+> **Trainer Guidance**
+> Management Planning Discussion:
+> 1. **Anaemia:** Needs iron replacement.
+> 2. **HMB Treatment:** Discuss NG88 hierarchy.
+> * 1st Line: LNG-IUS (Mirena) - *Most effective*.
+> * 2nd Line (Non-hormonal): Tranexamic Acid + NSAIDs.
+> * 2nd Line (Hormonal): COCP or Oral Progestogens.
 
-<Case title="Case 2 — HMB + IMB (investigation needed)">
-  <Step title="Presenting problem" open>
-  41-year-old: heavy periods plus spotting between periods for 3 months.
+### Step 4: Outcome
+Sarah declines the Coil (LNG-IUS) as she dislikes the idea of a procedure. She opts for **Tranexamic Acid** (1g TDS during menses) and **Mefenamic Acid**. She starts Ferrous Fumarate.
 
-  **Discussion prompts:**
-  - What are the key risk factors for endometrial pathology?
-  - What does your exam need to document?
-  - What investigations are appropriate (and what must not be delayed)?
-  </Step>
+**Plan:** Review in 3 months to check bleeding control and repeat FBC.
 
-  <Step title="Exam">
-  Speculum: cervix appears benign. Bimanual: no mass, mild uterine enlargement.
+## Case: HMB with Intermenstrual Bleeding
 
-  **Discussion prompts:**
-  - When is pelvic ultrasound useful?
-  - How do you safety-net and communicate uncertainty?
-  </Step>
-</Case>
+### Step 1: Presentation
+**Patient:** Diane, 42-year-old female.
+**Complaint:** Heaviness has increased over 6 months, but she is actually worried because she has noticed spotting a few days before her period starts.
 
-## References
-- NICE. Heavy menstrual bleeding: assessment and management (NG88). https://www.nice.org.uk/guidance/ng88
+> **Trainer Guidance**
+> How does the management change with the addition of Intermenstrual Bleeding (IMB)?
+> *Key Point:* IMB is a red flag for structural pathology (Polyps, Fibroids, Malignancy) or Infection. This patient **requires** physical examination and visualization of the cervix.
+
+### Step 2: Assessment
+**Speculum:** Cervix appears healthy. No polyps visible.
+**Bimanual:** Bulky uterus (approx 10-12 week size), non-tender. mobile.
+
+> **Trainer Guidance**
+> *Decision Point:* A bulky uterus + IMB triggers the need for imaging.
+> A **Transvaginal Ultrasound (TVUSS)** is now mandatory to exclude fibroids or endometrial pathology.
+> *Referral Criteria:* If ultrasound shows polyp or submucosal fibroid, she needs Hysteroscopy. If endometrium is thickened (>10mm in pre-menopause usually acceptable, but clinical judgement applies regarding biopsy if IMB persistent).

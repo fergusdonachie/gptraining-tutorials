@@ -22,40 +22,57 @@ const ContentStudio: React.FC<ContentStudioProps> = ({ onAdd, onCancel }) => {
   const handleGenerateAI = async () => {
     if (!aiTopic.trim()) return;
     setIsGenerating(true);
-    setGenerationStep('Analysing clinical topic...');
+    setGenerationStep('Designing clinical scenario...');
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      const prompt = `Create a high-fidelity GP clinical simulation tutorial about "${aiTopic}".
+      const prompt = `Create a GP clinical tutorial for "${aiTopic}" using the following Standard Markdown format.
+
+      Format Requirements:
+      1. Start with Frontmatter:
+         ---
+         title: [Title]
+         description: [Short summary]
+         specialty: [Specialty]
+         tags: [Tag1, Tag2]
+         date: [YYYY-MM-DD]
+         ---
       
-      Structure requirements:
-      1. Start with high-level learning points in a <Callout type="ok" title="Curriculum Goals"> tag.
-      2. Include a management roadmap in a <Callout type="note" title="Management Algorithm"> tag.
-      3. Create a primary <Case title="..." age="..." sex="..."> component. 
-         - age and sex are mandatory properties for <Case>.
-      4. Inside <Case>, use 3-5 <Step title="..."> tags for the staged reveal.
-      5. Every <Step> MUST include a "Discussion prompts:" section at the end for the logic review.
-      6. Use markdown for headings (##) and evidence-based clinical reasoning.
+      2. Introduction: Standard markdown text with bullet points.
+         Use > **Learning Point:** for key messages.
+
+      3. The Case:
+         Start with "## Case: [Patient Name/Scenario]"
+         
+         Break the case into revealed steps using Level 3 headers:
+         ### Step 1: Presentation
+         [Patient history...]
+         > **Trainer Guidance:** [Specific questions to ask trainee]
+
+         ### Step 2: Examination
+         [Findings...]
+         > **Trainer Guidance:** [What specifically to look for]
+
+         ### Step 3: Management
+         [Plan...]
       
-      Tone: Professional, exam-focused (MRCGP level), utilizing UK standards (NICE/CKS).`;
+      Content: Professional, UK GP (NICE/CKS) aligned.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,
-        config: {
-          systemInstruction: "You are the Head of Clinical Simulation for UK General Practice. You output raw markdown with custom interactive tags: <Case>, <Step>, and <Callout>."
-        }
       });
 
       const content = response.text || '';
       setMarkdown(content);
       
-      const titleMatch = content.match(/^(?:#|##)\s+(.*)$/m);
-      if (titleMatch) setTitle(titleMatch[1]);
-      else setTitle(aiTopic + " Case Simulation");
+      // Attempt to extract title from frontmatter or regex
+      const titleMatch = content.match(/title:\s*(.*)/);
+      if (titleMatch) setTitle(titleMatch[1].trim());
+      else setTitle(aiTopic);
 
-      setGenerationStep('Case successfully generated.');
+      setGenerationStep('Scenario generated.');
     } catch (err) {
       console.error('AI Generation failed:', err);
       setGenerationStep('Generation failed.');
@@ -68,11 +85,13 @@ const ContentStudio: React.FC<ContentStudioProps> = ({ onAdd, onCancel }) => {
   const handleSaveToSession = () => {
     if (!title || !markdown) return;
 
+    // Parse Frontmatter if possible for metadata, otherwise fallback
+    // Simple extraction for the draft object
     const newTutorial: Tutorial = {
       id: `local-${Date.now()}`,
       metadata: {
         title,
-        description: desc || `Clinical reasoning simulation on ${title}.`,
+        description: desc || `Clinical scenario: ${title}`,
         tags: tags.split(',').map(s => s.trim()),
         date: new Date().toLocaleDateString(),
         specialty,
@@ -108,7 +127,7 @@ const ContentStudio: React.FC<ContentStudioProps> = ({ onAdd, onCancel }) => {
           </div>
           
           <p className="text-slate-400 font-medium mb-8 max-w-lg leading-relaxed">
-            Instantly create a structured, staged-reveal simulation for any clinical condition. Perfect for ad-hoc tutorials or filling curriculum gaps.
+            Create a structured staged-reveal tutorial instantly. Uses standard Markdown format.
           </p>
 
           <div className="flex gap-4">
@@ -117,7 +136,7 @@ const ContentStudio: React.FC<ContentStudioProps> = ({ onAdd, onCancel }) => {
                 value={aiTopic}
                 onChange={e => setAiTopic(e.target.value)}
                 disabled={isGenerating}
-                placeholder="e.g. Acute breathless patient with history of COPD"
+                placeholder="e.g. 6 week baby check"
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 outline-none focus:border-[#FF5C35] transition-all text-lg font-medium placeholder:text-white/20"
               />
               {generationStep && (
@@ -168,7 +187,7 @@ const ContentStudio: React.FC<ContentStudioProps> = ({ onAdd, onCancel }) => {
             </div>
 
             <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Case Content (Markdown)</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Case Content (Standard Markdown)</label>
                 <textarea 
                     value={markdown}
                     onChange={e => setMarkdown(e.target.value)}
